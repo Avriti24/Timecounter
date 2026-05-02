@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Time Widget</title>
+  <style>
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .widget {
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      width: 320px;
+    }
+
+    .time {
+      font-size: 40px;
+      font-weight: bold;
+    }
+
+    .info {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #94a3b8;
+    }
+
+    .quote {
+      margin-top: 20px;
+      font-size: 16px;
+      font-style: italic;
+      color: #cbd5f5;
+    }
+
+    .custom {
+      margin-top: 15px;
+      font-size: 16px;
+      color: white(236, 49%, 25%);
+      font-weight: bold;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      background: #3b82f6;
+      color: white;
+      cursor: pointer;
+    }
+
+    textarea, input {
+      width: 100%;
+      margin-top: 8px;
+      border-radius: 8px;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="widget">
+  <div class="time" id="time"></div>
+  <div class="info" id="date"></div>
+  <div class="info" id="dayOfYear"></div>
+  <div class="info" id="weekOfYear"></div>
+
+  <div class="custom" id="customDate"></div>
+
+  <button onclick="toggleDateEdit()">Set Date & Message</button>
+
+  <div id="dateEditor" style="display:none;">
+    <input type="date" id="dateInput">
+    <input type="text" id="messageInput" placeholder="Enter your message">
+    <button onclick="saveDate()">Save</button>
+  </div>
+
+  <div class="quote" id="quote"></div>
+
+  <button onclick="toggleEdit()">Edit Quotes</button>
+  <div id="editor" style="display:none;">
+    <textarea id="quoteInput" rows="4"></textarea>
+    <button onclick="saveQuotes()">Save Quotes</button>
+  </div>
+</div>
+
+<script>
+let defaultQuotes = [
+  "Every day counts.",
+  "You are closer than you think.",
+  "Make today meaningful.",
+  "Small steps matter.",
+  "Don’t waste this day."
+];
+
+let quotes = JSON.parse(localStorage.getItem("quotes")) || defaultQuotes;
+
+let savedDate = localStorage.getItem("customDate");
+let savedMessage = localStorage.getItem("customMessage") || "your journey";
+
+// MAIN UPDATE
+function updateWidget() {
+  const now = new Date();
+
+  document.getElementById("time").innerText = now.toLocaleTimeString();
+  document.getElementById("date").innerText = now.toDateString();
+
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now - start;
+  const oneDay = 1000 * 60 * 60 * 24;
+  const day = Math.floor(diff / oneDay);
+
+  document.getElementById("dayOfYear").innerText =
+    "Day " + day + " of 365";
+
+  const firstDay = new Date(now.getFullYear(), 0, 1);
+  const week = Math.ceil((((now - firstDay) / oneDay) + firstDay.getDay() + 1) / 7);
+
+  document.getElementById("weekOfYear").innerText =
+    "Week " + week + " of the year";
+
+  // CUSTOM DATE + MESSAGE
+  if (savedDate) {
+    const startDate = new Date(savedDate);
+    const diffTime = now - startDate;
+    const daysPassed = Math.floor(diffTime / oneDay);
+
+    document.getElementById("customDate").innerText =
+      daysPassed + " days since " + savedMessage;
+  } else {
+    document.getElementById("customDate").innerText =
+      "No date selected";
+  }
+
+  // RANDOM QUOTE
+  const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+  document.getElementById("quote").innerText = randomQuote;
+}
+
+// TOGGLE DATE EDIT
+function toggleDateEdit() {
+  const editor = document.getElementById("dateEditor");
+  editor.style.display = editor.style.display === "none" ? "block" : "none";
+
+  document.getElementById("messageInput").value = savedMessage;
+}
+
+// SAVE DATE + MESSAGE
+function saveDate() {
+  const date = document.getElementById("dateInput").value;
+  const message = document.getElementById("messageInput").value;
+
+  if (date) {
+    localStorage.setItem("customDate", date);
+    savedDate = date;
+  }
+
+  if (message) {
+    localStorage.setItem("customMessage", message);
+    savedMessage = message;
+  }
+
+  alert("Saved successfully!");
+}
+
+// QUOTES
+function toggleEdit() {
+  const editor = document.getElementById("editor");
+  editor.style.display = editor.style.display === "none" ? "block" : "none";
+
+  document.getElementById("quoteInput").value = quotes.join("\n");
+}
+
+function saveQuotes() {
+  const input = document.getElementById("quoteInput").value;
+  quotes = input.split("\n").filter(q => q.trim() !== "");
+  localStorage.setItem("quotes", JSON.stringify(quotes));
+  alert("Quotes saved!");
+}
+
+// RUN
+setInterval(updateWidget, 1000);
+updateWidget();
+</script>
+
+</body>
+</html>
